@@ -122,7 +122,102 @@ elif menu == "Login":
         if data:
 
             st.success("Login Successful ✅")
+import pandas as pd
 
+model = joblib.load("student_model.pkl")
+columns = joblib.load("model_columns.pkl")
+
+st.subheader("📊 Enter Student Details")
+
+hours_studied = st.number_input("Hours Studied", 0.0, 24.0)
+
+attendance = st.number_input("Attendance %", 0.0, 100.0)
+
+previous_scores = st.number_input("Previous Scores", 0.0, 100.0)
+
+sleep_hours = st.number_input("Sleep Hours", 0.0, 24.0)
+
+motivation_level = st.selectbox(
+    "Motivation Level",
+    ["Low", "Medium", "High"]
+)
+
+teacher_quality = st.selectbox(
+    "Teacher Quality",
+    ["Poor", "Average", "Good"]
+)
+
+school_type = st.selectbox(
+    "School Type",
+    ["Public", "Private"]
+)
+
+internet_access = st.selectbox(
+    "Internet Access",
+    ["Yes", "No"]
+)
+
+family_income = st.selectbox(
+    "Family Income",
+    ["Low", "Medium", "High"]
+)
+
+parental_involvement = st.selectbox(
+    "Parental Involvement",
+    ["Low", "Medium", "High"]
+)
+
+parental_education = st.selectbox(
+    "Parental Education",
+    ["School", "College"]
+)
+
+peer_influence = st.selectbox(
+    "Peer Influence",
+    ["Negative", "Neutral", "Positive"]
+)
+
+learning_resources = st.selectbox(
+    "Learning Resources",
+    ["Low", "Medium", "High"]
+)
+
+activities = st.selectbox(
+    "Extracurricular Activities",
+    ["Yes", "No"]
+)
+
+if st.button("Predict Exam Score"):
+
+    data = {
+        "Hours_Studied": hours_studied,
+        "Attendance": attendance,
+        "Previous_Scores": previous_scores,
+        "Sleep_Hours": sleep_hours,
+
+        "Motivation_Level": motivation_level,
+        "Teacher_Quality": teacher_quality,
+        "School_Type": school_type,
+        "Internet_Access": internet_access,
+        "Family_Income": family_income,
+        "Parental_Involvement": parental_involvement,
+        "Parental_Education_Level": parental_education,
+        "Peer_Influence": peer_influence,
+        "Learning_Resources": learning_resources,
+        "Extracurricular_Activities": activities
+    }
+
+    input_df = pd.DataFrame([data])
+
+    input_df = pd.get_dummies(input_df)
+
+    input_df = input_df.reindex(columns=columns, fill_value=0)
+
+    prediction = model.predict(input_df)
+
+    st.success(
+        f"🎯 Predicted Exam Score: {round(prediction[0], 2)}"
+    )
             st.subheader("Predict Student Score")
 
             hours = st.number_input(
