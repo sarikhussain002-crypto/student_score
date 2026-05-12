@@ -1,84 +1,134 @@
 import streamlit as st
-import joblib
-import pandas as pd
 
-# =========================
-# LOAD MODEL
-# =========================
-model = joblib.load("student_model.pkl")
-columns = joblib.load("model_columns.pkl")
+st.set_page_config(
+    page_title="Student Score Prediction",
+    page_icon="🎓",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# =========================
-# TITLE
-# =========================
-st.title("🎓 Student Score Predictor")
+# HIDE SIDEBAR + CUSTOM UI
+st.markdown("""
+<style>
 
-# =========================
-# INPUT FIELDS
-# =========================
-hours = st.number_input("Hours Studied", 0.0, 24.0)
-attendance = st.number_input("Attendance", 0.0, 100.0)
-previous = st.number_input("Previous Score", 0.0, 100.0)
-sleep = st.number_input("Sleep Hours", 0.0, 12.0)
+/* Hide Sidebar */
+[data-testid="stSidebar"] {
+    display: none;
+}
 
-motivation = st.selectbox("Motivation Level", ["Low", "Medium", "High"])
-teacher = st.selectbox("Teacher Quality", ["Poor", "Average", "Good"])
-school = st.selectbox("School Type", ["Public", "Private"])
-internet = st.selectbox("Internet Access", ["Yes", "No"])
-income = st.selectbox("Family Income", ["Low", "Medium", "High"])
-parent = st.selectbox("Parental Involvement", ["Low", "Medium", "High"])
-education = st.selectbox("Parent Education", ["School", "College"])
-peer = st.selectbox("Peer Influence", ["Negative", "Neutral", "Positive"])
-resources = st.selectbox("Learning Resources", ["Low", "Medium", "High"])
-activities = st.selectbox("Extracurricular Activities", ["Yes", "No"])
+/* Main Background */
+.stApp {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    overflow: hidden;
+}
 
-# =========================
-# PREDICTION BUTTON
-# =========================
-if st.button("Predict Score"):
+/* Title */
+.title {
+    text-align: center;
+    font-size: 70px;
+    font-weight: bold;
+    color: white;
+    margin-top: 50px;
+    animation: glow 2s infinite alternate;
+}
 
-    # Create input dictionary
-    data = {
-        "Hours_Studied": hours,
-        "Attendance": attendance,
-        "Previous_Scores": previous,
-        "Sleep_Hours": sleep,
+/* Subtitle */
+.subtitle {
+    text-align: center;
+    color: #cfcfcf;
+    font-size: 25px;
+    margin-bottom: 50px;
+}
 
-        "Motivation_Level": motivation,
-        "Teacher_Quality": teacher,
-        "School_Type": school,
-        "Internet_Access": internet,
-        "Family_Income": income,
-        "Parental_Involvement": parent,
-        "Parental_Education_Level": education,
-        "Peer_Influence": peer,
-        "Learning_Resources": resources,
-        "Extracurricular_Activities": activities
+/* Glass Card */
+.glass {
+    width: 60%;
+    margin: auto;
+    padding: 50px;
+    border-radius: 25px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    box-shadow: 0px 0px 40px rgba(0,0,0,0.5);
+    animation: fade 1.5s ease;
+}
+
+/* Buttons */
+.stButton > button {
+    width: 100%;
+    height: 60px;
+    border-radius: 15px;
+    border: none;
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(to right, #00c6ff, #0072ff);
+    transition: 0.3s;
+}
+
+/* Button Hover */
+.stButton > button:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 0px 20px #00c6ff;
+}
+
+/* Glow Animation */
+@keyframes glow {
+    from {
+        text-shadow: 0px 0px 15px #00c6ff;
     }
 
-    # Convert to DataFrame
-    input_df = pd.DataFrame([data])
+    to {
+        text-shadow: 0px 0px 35px #0072ff;
+    }
+}
 
-    # Apply encoding
-    input_df = pd.get_dummies(input_df)
+/* Fade Animation */
+@keyframes fade {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
 
-    # Match training columns
-    input_df = input_df.reindex(columns=columns, fill_value=0)
+    to {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
 
-    # =========================
-    # PREDICT
-    # =========================
-    prediction = model.predict(input_df)
+</style>
+""", unsafe_allow_html=True)
 
-    # =========================
-    # FIX UNREALISTIC VALUES
-    # =========================
-    final_score = max(40, min(100, prediction[0]))
+# TITLE
+st.markdown("""
+<div class="title">
+🎓 Student Score Prediction
+</div>
+""", unsafe_allow_html=True)
 
-    # Convert to integer
-    final_score = int(round(final_score))
+# SUBTITLE
+st.markdown("""
+<div class="subtitle">
+AI Powered Student Performance Predictor
+</div>
+""", unsafe_allow_html=True)
 
-    # =========================
-    # OUTPUT
-    # =========================
-    st.success(f"🎯 Predicted Exam Score: {final_score}")
+# CARD START
+st.markdown('<div class="glass">', unsafe_allow_html=True)
+
+st.write("")
+
+col1, col2, col3 = st.columns([1,1,1])
+
+with col2:
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        if st.button("🔐 Login"):
+            st.switch_page("pages/login.py")
+
+    with c2:
+        if st.button("📝 Signup"):
+            st.switch_page("pages/signup.py")
+
+st.markdown("</div>", unsafe_allow_html=True)
