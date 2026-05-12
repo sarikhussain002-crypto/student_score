@@ -1,134 +1,143 @@
 import streamlit as st
+import sqlite3
+import joblib
 
+# DATABASE
+conn = sqlite3.connect("users.db", check_same_thread=False)
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users(
+    name TEXT,
+    email TEXT,
+    password TEXT
+)
+""")
+
+conn.commit()
+
+# MODEL LOAD
+model = joblib.load("student_score_model.pkl")
+
+# PAGE CONFIG
 st.set_page_config(
     page_title="Student Score Prediction",
     page_icon="🎓",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="centered"
 )
 
-# HIDE SIDEBAR + CUSTOM UI
+# CUSTOM CSS
 st.markdown("""
 <style>
 
-/* Hide Sidebar */
-[data-testid="stSidebar"] {
-    display: none;
+.stApp{
+    background: linear-gradient(135deg,#141e30,#243b55);
 }
 
-/* Main Background */
-.stApp {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    overflow: hidden;
+.title{
+    text-align:center;
+    font-size:55px;
+    color:white;
+    font-weight:bold;
 }
 
-/* Title */
-.title {
-    text-align: center;
-    font-size: 70px;
-    font-weight: bold;
-    color: white;
-    margin-top: 50px;
-    animation: glow 2s infinite alternate;
+.subtitle{
+    text-align:center;
+    color:#dcdcdc;
+    margin-bottom:30px;
 }
 
-/* Subtitle */
-.subtitle {
-    text-align: center;
-    color: #cfcfcf;
-    font-size: 25px;
-    margin-bottom: 50px;
+div[data-baseweb="input"]{
+    background:white;
+    border-radius:10px;
 }
 
-/* Glass Card */
-.glass {
-    width: 60%;
-    margin: auto;
-    padding: 50px;
-    border-radius: 25px;
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(15px);
-    box-shadow: 0px 0px 40px rgba(0,0,0,0.5);
-    animation: fade 1.5s ease;
-}
-
-/* Buttons */
-.stButton > button {
-    width: 100%;
-    height: 60px;
-    border-radius: 15px;
-    border: none;
-    font-size: 22px;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(to right, #00c6ff, #0072ff);
-    transition: 0.3s;
-}
-
-/* Button Hover */
-.stButton > button:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 0px 20px #00c6ff;
-}
-
-/* Glow Animation */
-@keyframes glow {
-    from {
-        text-shadow: 0px 0px 15px #00c6ff;
-    }
-
-    to {
-        text-shadow: 0px 0px 35px #0072ff;
-    }
-}
-
-/* Fade Animation */
-@keyframes fade {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0px);
-    }
+.stButton > button{
+    width:100%;
+    height:50px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(to right,#00c6ff,#0072ff);
+    color:white;
+    font-size:18px;
+    font-weight:bold;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # TITLE
-st.markdown("""
-<div class="title">
-🎓 Student Score Prediction
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div class='title'>🎓 Student Score Prediction</div>", unsafe_allow_html=True)
 
-# SUBTITLE
-st.markdown("""
-<div class="subtitle">
-AI Powered Student Performance Predictor
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>AI Powered Student Performance Predictor</div>", unsafe_allow_html=True)
 
-# CARD START
-st.markdown('<div class="glass">', unsafe_allow_html=True)
+# MENU
+menu = st.sidebar.selectbox(
+    "Menu",
+    ["Home", "Signup", "Login"]
+)
 
-st.write("")
+# HOME
+if menu == "Home":
 
-col1, col2, col3 = st.columns([1,1,1])
+    st.write("## Welcome to Student Score Prediction App 🚀")
 
-with col2:
+# SIGNUP
+elif menu == "Signup":
 
-    c1, c2 = st.columns(2)
+    st.subheader("Create Account")
 
-    with c1:
-        if st.button("🔐 Login"):
-            st.switch_page("pages/login.py")
+    name = st.text_input("Full Name")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
 
-    with c2:
-        if st.button("📝 Signup"):
-            st.switch_page("pages/signup.py")
+    if st.button("Signup"):
 
-st.markdown("</div>", unsafe_allow_html=True)
+        cursor.execute(
+            "INSERT INTO users VALUES (?, ?, ?)",
+            (name, email, password)
+        )
+
+        conn.commit()
+
+        st.success("Account Created Successfully")
+
+# LOGIN
+elif menu == "Login":
+
+    st.subheader("Login")
+
+    email = st.text_input("Enter Email")
+    password = st.text_input("Enter Password", type="password")
+
+    if st.button("Login"):
+
+        cursor.execute(
+            "SELECT * FROM users WHERE email=? AND password=?",
+            (email, password)
+        )
+
+        data = cursor.fetchone()
+
+        if data:
+
+            st.success("Login Successful ✅")
+
+            st.subheader("Predict Student Score")
+
+            hours = st.number_input(
+                "Enter Study Hours",
+                min_value=0.0
+            )
+
+            if st.button("Predict Score"):
+
+                prediction = model.predict([[hours]])
+
+                st.success(
+                    f"Predicted Score = {prediction[0]:.2f}"
+                )
+
+        else:
+
+            st.error("Wrong Email or Password")
